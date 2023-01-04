@@ -1,0 +1,57 @@
+version: "3"
+services:
+  neo4j:
+    image: neo4j:4.4.16
+    container_name: neo4j_db
+    environment:
+      NEO4J_AUTH: 'neo4j/test'
+      NEO4J_dbms_connector_http_listen__address: ":7474"
+      NEO4J_dbms_connector_bolt_listen__address: ":7687"
+    volumes:
+      - ./neo4j_db/conf:/conf
+      - ./neo4j_db/data:/data
+      - ./neo4j_db/logs:/logs
+      - ./neo4j_db/plugins:/plugins
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    networks:
+      - local
+
+  init-neo4j:
+    image: neo4j:4.4.16
+    command: >
+      bash -c "sleep 40 &&
+      cat /queries/clean | cypher-shell -a neo4j://neo4j:7687 -u $${NEO4J_LOGIN} -p $${NEO4J_PASSWORD} --format plain &&
+      sleep 5 &&
+      cat /queries/load_people | cypher-shell -a neo4j://neo4j:7687 -u $${NEO4J_LOGIN} -p $${NEO4J_PASSWORD} --format plain &&
+      cat /queries/load_roads | cypher-shell -a neo4j://neo4j:7687 -u $${NEO4J_LOGIN} -p $${NEO4J_PASSWORD} --format plain"
+    environment:
+      NEO4J_LOGIN: "neo4j"
+      NEO4J_PASSWORD: "test"
+    volumes:
+      - ./queries:/queries
+    depends_on:
+      neo4j:
+        condition: service_started
+    networks:
+      - local
+
+  client:
+    build: .
+    command: "python main.py"
+    environment:
+      NEO4J_LOGIN: "neo4j"
+      NEO4J_PASSWORD: "test"
+    volumes:
+      - ./results:/app/results
+    depends_on:
+      init-neo4j:
+        condition: service_completed_successfully
+    networks:
+      - local
+
+
+networks:
+  local:
+    driver: bridge

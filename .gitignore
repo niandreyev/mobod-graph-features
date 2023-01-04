@@ -1,0 +1,4 @@
+__pycache__
+neo4j_db/data
+neo4j_db/logs
+.DS_Store

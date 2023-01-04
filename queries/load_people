@@ -1,0 +1,24 @@
+CREATE 
+  (dan:Person {name: 'Dan', age: 18}),
+  (annie:Person {name: 'Annie', age: 12}),
+  (matt:Person {name: 'Matt', age: 22}),
+  (jeff:Person {name: 'Jeff', age: 51}),
+  (brie:Person {name: 'Brie', age: 45}),
+  (elsa:Person {name: 'Elsa', age: 65}),
+  (john:Person {name: 'John', age: 64}),
+
+  (dan)-[:KNOWS {weight: 1.0}]->(annie),
+  (dan)-[:KNOWS {weight: 1.0}]->(matt),
+  (annie)-[:KNOWS {weight: 1.0}]->(matt),
+  (annie)-[:KNOWS {weight: 1.0}]->(jeff),
+  (annie)-[:KNOWS {weight: 1.0}]->(brie),
+  (matt)-[:KNOWS {weight: 3.5}]->(brie),
+  (brie)-[:KNOWS {weight: 1.0}]->(elsa),
+  (brie)-[:KNOWS {weight: 2.0}]->(jeff),
+  (john)-[:KNOWS {weight: 1.0}]->(jeff);
+
+CALL gds.graph.project(
+  'People_project',
+  'Person',
+  {KNOWS: {orientation: 'UNDIRECTED'}}
+);

@@ -1,0 +1,18 @@
+CREATE CONSTRAINT cities IF NOT EXISTS ON (c:City) ASSERT c.name IS UNIQUE;
+
+LOAD CSV WITH HEADERS FROM 'https://gist.githubusercontent.com/lassewesth/634281cced11147432cf232a2c36e080/raw/1ed1f4fe4ca4c8092bbc8557addd1e5d87316833/eroads.csv' AS row
+MERGE (origin: City {name: row.origin_reference_place})
+SET origin.country_code = row.origin_country_code
+
+MERGE (destination: City {name: row.destination_reference_place})
+SET destination.country_code = row.destination_country_code
+
+MERGE (origin)-[eroad:EROAD {number: row.road_number}]-(destination)
+SET eroad.distance = toInteger(row.distance), eroad.watercrossing = toBoolean(row.watercrossing);
+
+
+CALL gds.graph.project(
+  'City_project',
+  'City',
+  {EROAD: {orientation: 'UNDIRECTED'}}
+);
